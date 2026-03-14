@@ -9,13 +9,13 @@ import { NatsClient, log } from '@eeveebot/libeevee';
 const moduleStartTime = Date.now();
 
 // Command UUIDs
-const slapanusCommandUUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-const superslapanusCommandUUID = 'b2c3d4e5-f6a7-8901-bcde-f23456789012';
-const superslapanusv2CommandUUID = 'c3d4e5f6-a7b8-9012-cdef-345678901234';
-const supersuckurdickCommandUUID = 'd4e5f6a7-b8c9-0123-def0-456789012345';
-const superslapaniggasanusCommandUUID = 'e5f6a7b8-c9d0-1234-ef01-567890123456';
-const superslapsiestaCommandUUID = 'f6a7b8c9-d0e1-2345-f012-678901234567';
-const superslapbakaCommandUUID = '07b8c9d0-e1f2-3456-0123-789012345678';
+const slapanusCommandUUID = '6771387C-5E25-4758-BDF2-ADEDCD3D5272';
+const superslapanusCommandUUID = '36060973-396B-435C-8998-2980E6C2C0C0';
+const superslapanusv2CommandUUID = '6E3C5726-3175-436A-9432-4B8A38D3E986';
+const supersuckurdickCommandUUID = '40897742-1474-43E0-9F6D-98FC83296FDA';
+const superslapaniggasanusCommandUUID = 'B9643E38-0C43-4530-8344-AD48C372E146';
+const superslapsiestaCommandUUID = '4398F1B5-6537-49BD-A9C2-7A90FA5E0D87';
+const superslapbakaCommandUUID = 'C3104B60-8278-481F-8BBF-DB109147ABF7';
 
 const natsClients: Array<InstanceType<typeof NatsClient>> = [];
 const natsSubscriptions: Array<Promise<string | boolean>> = [];
@@ -215,11 +215,75 @@ async function registerSuperslapCommands(): Promise<void> {
 // Register commands at startup
 await registerSuperslapCommands();
 
-// Helper function to get users in a channel (simulated)
-function getUsersInChannel(): string[] {
-  // In a real implementation, this would query the connector for actual users
-  // For now, we'll return a static list for demonstration
-  return ['alice', 'bob', 'charlie', 'dave', 'eve'];
+// Global map to store pending user list requests
+const pendingUserRequests = new Map<string, { resolve: (users: string[]) => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>();
+
+// Helper function to get users in a channel by querying the IRC connector
+async function getUsersInChannel(platform: string, instance: string, channel: string, nats: InstanceType<typeof NatsClient>): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    // Generate a unique reply channel
+    const replyChannel = `superslap.userlist.reply.${Date.now()}.${Math.random().toString(36).substr(2, 9)}`;
+
+    // Set up timeout
+    const timeout = setTimeout(() => {
+      // Clean up the pending request
+      pendingUserRequests.delete(replyChannel);
+
+      reject(new Error('Timeout waiting for user list'));
+    }, 5000); // 5 second timeout
+
+    // Store the promise resolver
+    pendingUserRequests.set(replyChannel, { resolve, reject, timeout });
+
+    // Subscribe to the reply channel
+    void nats.subscribe(replyChannel, (subject, message) => {
+      try {
+        // Clean up the pending request
+        const request = pendingUserRequests.get(replyChannel);
+        if (request) {
+          clearTimeout(request.timeout);
+          pendingUserRequests.delete(replyChannel);
+        }
+
+        // Parse the response
+        const response = JSON.parse(message.string());
+
+        // Check if there was an error
+        if (response.error) {
+          reject(new Error(response.error));
+          return;
+        }
+
+        // Extract user nicks from the response
+        const users = response.users.map((user: { nick: string }) => user.nick);
+        resolve(users);
+      } catch (error) {
+        log.error('Failed to process user list response', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
+    }).catch((error) => {
+      log.error('Failed to subscribe to user list reply channel', {
+        producer: 'superslap',
+        error: error instanceof Error ? error.message : String(error),
+      });
+      reject(error instanceof Error ? error : new Error(String(error)));
+    });
+
+    // Send the control command to the IRC connector
+    const controlMessage = {
+      action: 'list-users-in-channel',
+      data: {
+        channel: channel,
+        replyChannel: replyChannel,
+      },
+    };
+
+    const controlTopic = `control.chatConnectors.${platform}.${instance}`;
+    void nats.publish(controlTopic, JSON.stringify(controlMessage));
+  });
 }
 
 // Helper function to check if a user is vulnerable (not an operator)
@@ -319,7 +383,7 @@ function sendDelayedMessages(
 // Subscribe to slapanus command execution messages
 const slapanusCommandSub = nats.subscribe(
   `command.execute.${slapanusCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for slapanus', {
@@ -331,7 +395,16 @@ const slapanusCommandSub = nats.subscribe(
       });
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -374,7 +447,7 @@ natsSubscriptions.push(slapanusCommandSub);
 // Subscribe to superslapanus command execution messages
 const superslapanusCommandSub = nats.subscribe(
   `command.execute.${superslapanusCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for superslapanus', {
@@ -403,7 +476,16 @@ const superslapanusCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -451,7 +533,7 @@ natsSubscriptions.push(superslapanusCommandSub);
 // Subscribe to superslapanusv2 command execution messages
 const superslapanusv2CommandSub = nats.subscribe(
   `command.execute.${superslapanusv2CommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for superslapanusv2', {
@@ -480,7 +562,16 @@ const superslapanusv2CommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -528,7 +619,7 @@ natsSubscriptions.push(superslapanusv2CommandSub);
 // Subscribe to superslapaniggasanus command execution messages
 const superslapaniggasanusCommandSub = nats.subscribe(
   `command.execute.${superslapaniggasanusCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for superslapaniggasanus', {
@@ -557,7 +648,16 @@ const superslapaniggasanusCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -605,7 +705,7 @@ natsSubscriptions.push(superslapaniggasanusCommandSub);
 // Subscribe to supersuckurdick command execution messages
 const supersuckurdickCommandSub = nats.subscribe(
   `command.execute.${supersuckurdickCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for supersuckurdick', {
@@ -634,7 +734,16 @@ const supersuckurdickCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -677,7 +786,7 @@ natsSubscriptions.push(supersuckurdickCommandSub);
 // Subscribe to superslapsiesta command execution messages
 const superslapsiestaCommandSub = nats.subscribe(
   `command.execute.${superslapsiestaCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for superslapsiesta', {
@@ -706,7 +815,16 @@ const superslapsiestaCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
@@ -757,7 +875,7 @@ natsSubscriptions.push(superslapsiestaCommandSub);
 // Subscribe to superslapbaka command execution messages
 const superslapbakaCommandSub = nats.subscribe(
   `command.execute.${superslapbakaCommandUUID}`,
-  (subject, message) => {
+  async (subject, message) => {
     try {
       const data = JSON.parse(message.string());
       log.info('Received command.execute for superslapbaka', {
@@ -786,7 +904,16 @@ const superslapbakaCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      const users = getUsersInChannel();
+      let users: string[] = [];
+      try {
+        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+      } catch (error) {
+        log.error('Failed to get user list', {
+          producer: 'superslap',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
 
       // Remove the bot itself from the list
       const filteredUsers = users.filter((user) => user !== data.botNick);
