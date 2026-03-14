@@ -4,18 +4,20 @@
 // Implements various slap commands targeting users in a channel
 
 import { NatsClient, log } from '@eeveebot/libeevee';
+import { loadSuperslapConfig } from './lib/config-loader.mjs';
+import { SuperslapRootConfig } from './types/config.types.mjs';
 
 // Record module startup time for uptime tracking
 const moduleStartTime = Date.now();
 
 // Command UUIDs
-const slapanusCommandUUID = '6771387C-5E25-4758-BDF2-ADEDCD3D5272';
-const superslapanusCommandUUID = '36060973-396B-435C-8998-2980E6C2C0C0';
-const superslapanusv2CommandUUID = '6E3C5726-3175-436A-9432-4B8A38D3E986';
-const supersuckurdickCommandUUID = '40897742-1474-43E0-9F6D-98FC83296FDA';
-const superslapaniggasanusCommandUUID = 'B9643E38-0C43-4530-8344-AD48C372E146';
-const superslapsiestaCommandUUID = '4398F1B5-6537-49BD-A9C2-7A90FA5E0D87';
-const superslapbakaCommandUUID = 'C3104B60-8278-481F-8BBF-DB109147ABF7';
+const slapanusCommandUUID = '6771387c-5e25-4758-bdf2-adedcd3d5272';
+const superslapanusCommandUUID = '36060973-396b-435c-8998-2980e6c2c0c0';
+const superslapanusv2CommandUUID = '6e3c5726-3175-436a-9432-4b8a38d3e986';
+const supersuckurdickCommandUUID = '40897742-1474-43e0-9f6d-98fc83296fda';
+const superslapaniggasanusCommandUUID = 'b9643e38-0c43-4530-8344-ad48c372e146';
+const superslapsiestaCommandUUID = '4398f1b5-6537-49bd-a9c2-7a90fa5e0d87';
+const superslapbakaCommandUUID = 'c3104b60-8278-481f-8bbf-db109147abf7';
 
 const natsClients: Array<InstanceType<typeof NatsClient>> = [];
 const natsSubscriptions: Array<Promise<string | boolean>> = [];
@@ -57,6 +59,18 @@ const nats = new NatsClient({
 natsClients.push(nats);
 await nats.connect();
 
+// Load superslap configuration
+let superslapConfig: SuperslapRootConfig;
+try {
+  superslapConfig = await loadSuperslapConfig();
+} catch (error) {
+  log.error('Failed to load superslap configuration', {
+    producer: 'superslap',
+    error: error instanceof Error ? error.message : String(error),
+  });
+  throw error;
+}
+
 // Function to register all superslap commands with the router
 async function registerSuperslapCommands(): Promise<void> {
   // Default rate limit configuration
@@ -66,6 +80,22 @@ async function registerSuperslapCommands(): Promise<void> {
     limit: 3,
     interval: '1m',
   };
+
+  // Use configured rate limits or defaults
+  const slapanusRateLimit =
+    superslapConfig.ratelimits?.slapanus || defaultRateLimit;
+  const superslapanusRateLimit =
+    superslapConfig.ratelimits?.superslapanus || defaultRateLimit;
+  const superslapanusv2RateLimit =
+    superslapConfig.ratelimits?.superslapanusv2 || defaultRateLimit;
+  const supersuckurdickRateLimit =
+    superslapConfig.ratelimits?.supersuckurdick || defaultRateLimit;
+  const superslapaniggasanusRateLimit =
+    superslapConfig.ratelimits?.superslapaniggasanus || defaultRateLimit;
+  const superslapsiestaRateLimit =
+    superslapConfig.ratelimits?.superslapsiesta || defaultRateLimit;
+  const superslapbakaRateLimit =
+    superslapConfig.ratelimits?.superslapbaka || defaultRateLimit;
 
   // Register slapanus command
   const slapanusCommandRegistration = {
@@ -79,7 +109,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^slapanus\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: slapanusRateLimit,
   };
 
   // Register superslapanus command
@@ -94,7 +124,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^superslapanus\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: superslapanusRateLimit,
   };
 
   // Register superslapanusv2 command
@@ -109,7 +139,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^superslapanusv2\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: superslapanusv2RateLimit,
   };
 
   // Register supersuckurdick command
@@ -124,7 +154,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^supersuckurdick\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: supersuckurdickRateLimit,
   };
 
   // Register superslapaniggasanus command
@@ -139,7 +169,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^superslapaniggasanus\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: superslapaniggasanusRateLimit,
   };
 
   // Register superslapsiesta command
@@ -154,7 +184,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^superslapsiesta\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: superslapsiestaRateLimit,
   };
 
   // Register superslapbaka command
@@ -169,7 +199,7 @@ async function registerSuperslapCommands(): Promise<void> {
     user: '.*',
     regex: '^superslapbaka\\s*',
     platformPrefixAllowed: true,
-    ratelimit: defaultRateLimit,
+    ratelimit: superslapbakaRateLimit,
   };
 
   try {
@@ -216,10 +246,31 @@ async function registerSuperslapCommands(): Promise<void> {
 await registerSuperslapCommands();
 
 // Global map to store pending user list requests
-const pendingUserRequests = new Map<string, { resolve: (users: string[]) => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>();
+const pendingUserRequests = new Map<
+  string,
+  {
+    resolve: (
+      users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }>
+    ) => void;
+    reject: (error: Error) => void;
+    timeout: NodeJS.Timeout;
+  }
+>();
 
 // Helper function to get users in a channel by querying the IRC connector
-async function getUsersInChannel(platform: string, instance: string, channel: string, nats: InstanceType<typeof NatsClient>): Promise<string[]> {
+async function getUsersInChannel(
+  platform: string,
+  instance: string,
+  channel: string,
+  nats: InstanceType<typeof NatsClient>
+): Promise<
+  Array<{ nick: string; ident: string; hostname: string; modes: string[] }>
+> {
   return new Promise((resolve, reject) => {
     // Generate a unique reply channel
     const replyChannel = `superslap.userlist.reply.${Date.now()}.${Math.random().toString(36).substr(2, 9)}`;
@@ -236,41 +287,42 @@ async function getUsersInChannel(platform: string, instance: string, channel: st
     pendingUserRequests.set(replyChannel, { resolve, reject, timeout });
 
     // Subscribe to the reply channel
-    void nats.subscribe(replyChannel, (subject, message) => {
-      try {
-        // Clean up the pending request
-        const request = pendingUserRequests.get(replyChannel);
-        if (request) {
-          clearTimeout(request.timeout);
-          pendingUserRequests.delete(replyChannel);
+    void nats
+      .subscribe(replyChannel, (subject, message) => {
+        try {
+          // Clean up the pending request
+          const request = pendingUserRequests.get(replyChannel);
+          if (request) {
+            clearTimeout(request.timeout);
+            pendingUserRequests.delete(replyChannel);
+          }
+
+          // Parse the response
+          const response = JSON.parse(message.string());
+
+          // Check if there was an error
+          if (response.error) {
+            reject(new Error(response.error));
+            return;
+          }
+
+          // Return full user objects with hostmask information
+          resolve(response.users);
+        } catch (error) {
+          log.error('Failed to process user list response', {
+            producer: 'superslap',
+            error: error instanceof Error ? error.message : String(error),
+          });
+          reject(error instanceof Error ? error : new Error(String(error)));
         }
-
-        // Parse the response
-        const response = JSON.parse(message.string());
-
-        // Check if there was an error
-        if (response.error) {
-          reject(new Error(response.error));
-          return;
-        }
-
-        // Extract user nicks from the response
-        const users = response.users.map((user: { nick: string }) => user.nick);
-        resolve(users);
-      } catch (error) {
-        log.error('Failed to process user list response', {
+      })
+      .catch((error) => {
+        log.error('Failed to subscribe to user list reply channel', {
           producer: 'superslap',
           error: error instanceof Error ? error.message : String(error),
         });
         reject(error instanceof Error ? error : new Error(String(error)));
-      }
-    }).catch((error) => {
-      log.error('Failed to subscribe to user list reply channel', {
-        producer: 'superslap',
-        error: error instanceof Error ? error.message : String(error),
       });
-      reject(error instanceof Error ? error : new Error(String(error)));
-    });
 
     // Send the control command to the IRC connector
     const controlMessage = {
@@ -286,20 +338,74 @@ async function getUsersInChannel(platform: string, instance: string, channel: st
   });
 }
 
-// Helper function to check if a user is vulnerable (not an operator)
-function isVulnerableUser(user: string): boolean {
-  // In a real implementation, this would check user modes/permissions
-  // For now, we'll simulate by assuming most users are vulnerable except a few
-  const operators = ['alice', 'admin'];
-  return !operators.includes(user);
+// Helper function to check if a user is vulnerable (not invulnerable according to config)
+function isVulnerableUser(
+  user: { nick: string; ident: string; hostname: string; modes: string[] },
+  config: SuperslapRootConfig
+): boolean {
+  // Check if user is in the invulnerable users list
+  if (config.invulnerableUsers?.users?.includes(user.nick)) {
+    return false;
+  }
+
+  // Check if user matches any invulnerable hostmask patterns
+  const fullHostmask = `${user.ident}@${user.hostname}`;
+  if (config.invulnerableUsers?.hostmasks) {
+    for (const hostmaskPattern of config.invulnerableUsers.hostmasks) {
+      try {
+        const hostmaskRegex = new RegExp(hostmaskPattern);
+        if (
+          hostmaskRegex.test(user.hostname) ||
+          hostmaskRegex.test(fullHostmask)
+        ) {
+          return false;
+        }
+      } catch {
+        // If regex fails, fall back to exact match
+        if (
+          hostmaskPattern === user.hostname ||
+          hostmaskPattern === fullHostmask
+        ) {
+          return false;
+        }
+      }
+    }
+  }
+
+  // Check if user has operator modes (+o or +O or +a or +q)
+  const hasOperatorMode = user.modes.some((mode) =>
+    ['o', 'O', 'a', 'q'].includes(mode)
+  );
+  if (hasOperatorMode) {
+    return false;
+  }
+
+  // User is vulnerable
+  return true;
 }
 
 // Helper function to get a random target
 function getRandomTarget(
   fromUser: string,
   message: string,
-  users: string[]
+  users: Array<{
+    nick: string;
+    ident: string;
+    hostname: string;
+    modes: string[];
+  }>,
+  config: SuperslapRootConfig
 ): string {
+  // Filter out invulnerable users
+  const vulnerableUsers = users.filter(
+    (user) => isVulnerableUser(user, config) && user.nick !== fromUser
+  );
+
+  // If no vulnerable users left, return the sender (they can target themselves)
+  if (vulnerableUsers.length === 0) {
+    return fromUser;
+  }
+
   // If there's a potential target in the message
   if (message) {
     const messageParts = message.split(' ');
@@ -307,9 +413,12 @@ function getRandomTarget(
 
     // Attack the target
     if (action === 0) {
-      // If the target exists in the user list
-      if (users.includes(messageParts[0])) {
-        return messageParts[0];
+      // If the target exists in the vulnerable user list
+      const targetUser = vulnerableUsers.find(
+        (user) => user.nick === messageParts[0]
+      );
+      if (targetUser) {
+        return targetUser.nick;
       }
     }
     // Attack the caster
@@ -319,9 +428,9 @@ function getRandomTarget(
     // Else, use the default behavior
   }
 
-  // Pick a random user
-  const index = Math.floor(Math.random() * users.length);
-  return users[index];
+  // Pick a random vulnerable user
+  const index = Math.floor(Math.random() * vulnerableUsers.length);
+  return vulnerableUsers[index].nick;
 }
 
 // Helper function to send delayed messages
@@ -395,9 +504,19 @@ const slapanusCommandSub = nats.subscribe(
       });
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -407,10 +526,15 @@ const slapanusCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Queue actions
       const messages = [
@@ -458,27 +582,20 @@ const superslapanusCommandSub = nats.subscribe(
         user: data.user,
       });
 
-      // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
-        const errorMsg = {
-          channel: data.channel,
-          network: data.network,
-          instance: data.instance,
-          platform: data.platform,
-          text: "Kick somebody yourself, 'moderator'",
-          trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
-        return;
-      }
-
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -488,10 +605,10 @@ const superslapanusCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(data.user, data.text, filteredUsers, superslapConfig);
 
       // Queue actions
       const messages = [
@@ -545,7 +662,17 @@ const superslapanusv2CommandSub = nats.subscribe(
       });
 
       // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
+      if (
+        !isVulnerableUser(
+          {
+            nick: data.user,
+            ident: '',
+            hostname: data.userHost || '',
+            modes: [],
+          },
+          superslapConfig
+        )
+      ) {
         const errorMsg = {
           channel: data.channel,
           network: data.network,
@@ -562,9 +689,19 @@ const superslapanusv2CommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -574,10 +711,15 @@ const superslapanusv2CommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Queue actions
       const messages = [
@@ -631,7 +773,17 @@ const superslapaniggasanusCommandSub = nats.subscribe(
       });
 
       // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
+      if (
+        !isVulnerableUser(
+          {
+            nick: data.user,
+            ident: '',
+            hostname: data.userHost || '',
+            modes: [],
+          },
+          superslapConfig
+        )
+      ) {
         const errorMsg = {
           channel: data.channel,
           network: data.network,
@@ -648,9 +800,19 @@ const superslapaniggasanusCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -660,10 +822,15 @@ const superslapaniggasanusCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Queue actions
       const messages = [
@@ -717,7 +884,17 @@ const supersuckurdickCommandSub = nats.subscribe(
       });
 
       // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
+      if (
+        !isVulnerableUser(
+          {
+            nick: data.user,
+            ident: '',
+            hostname: data.userHost || '',
+            modes: [],
+          },
+          superslapConfig
+        )
+      ) {
         const errorMsg = {
           channel: data.channel,
           network: data.network,
@@ -734,9 +911,19 @@ const supersuckurdickCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -746,10 +933,15 @@ const supersuckurdickCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Queue actions
       const messages = [
@@ -798,7 +990,17 @@ const superslapsiestaCommandSub = nats.subscribe(
       });
 
       // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
+      if (
+        !isVulnerableUser(
+          {
+            nick: data.user,
+            ident: '',
+            hostname: data.userHost || '',
+            modes: [],
+          },
+          superslapConfig
+        )
+      ) {
         const errorMsg = {
           channel: data.channel,
           network: data.network,
@@ -815,9 +1017,19 @@ const superslapsiestaCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -827,10 +1039,15 @@ const superslapsiestaCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Pick a random slap message
       const slapIndex = Math.floor(Math.random() * spanishSlaps.length);
@@ -887,7 +1104,17 @@ const superslapbakaCommandSub = nats.subscribe(
       });
 
       // Check if user is vulnerable
-      if (!isVulnerableUser(data.user)) {
+      if (
+        !isVulnerableUser(
+          {
+            nick: data.user,
+            ident: '',
+            hostname: data.userHost || '',
+            modes: [],
+          },
+          superslapConfig
+        )
+      ) {
         const errorMsg = {
           channel: data.channel,
           network: data.network,
@@ -904,9 +1131,19 @@ const superslapbakaCommandSub = nats.subscribe(
       }
 
       // Get users in channel
-      let users: string[] = [];
+      let users: Array<{
+        nick: string;
+        ident: string;
+        hostname: string;
+        modes: string[];
+      }> = [];
       try {
-        users = await getUsersInChannel(data.platform, data.instance, data.channel, nats);
+        users = await getUsersInChannel(
+          data.platform,
+          data.instance,
+          data.channel,
+          nats
+        );
       } catch (error) {
         log.error('Failed to get user list', {
           producer: 'superslap',
@@ -916,10 +1153,15 @@ const superslapbakaCommandSub = nats.subscribe(
       }
 
       // Remove the bot itself from the list
-      const filteredUsers = users.filter((user) => user !== data.botNick);
+      const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig
+      );
 
       // Queue actions
       const messages = [

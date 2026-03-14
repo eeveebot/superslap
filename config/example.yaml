@@ -1,8 +1,54 @@
-# Example echo module configuration
+---
+# Example superslap module configuration
 
-# Rate limit configuration
-ratelimit:
-  mode: drop
-  level: user
-  limit: 5
-  interval: 1m
+# Invulnerable users configuration
+# Users matching these patterns will be protected from superslap commands
+invulnerableUsers:
+  # Protect specific users by nickname
+  users:
+    - "admin"
+    - "moderator"
+    - "bot"
+  
+  # Protect users by hostmask pattern (regex supported)
+  hostmasks:
+    - "trusted-user!.*@trusted-domain\\.com"
+    - ".*!moderator@.*"
+
+# Rate limit configuration for superslap commands
+ratelimits:
+  slapanus:
+    mode: drop
+    level: user
+    limit: 3
+    interval: 1m
+  superslapanus:
+    mode: drop
+    level: user
+    limit: 2
+    interval: 2m
+  superslapanusv2:
+    mode: drop
+    level: user
+    limit: 1
+    interval: 5m
+  supersuckurdick:
+    mode: drop
+    level: user
+    limit: 1
+    interval: 10m
+  superslapaniggasanus:
+    mode: drop
+    level: user
+    limit: 1
+    interval: 15m
+  superslapsiesta:
+    mode: drop
+    level: user
+    limit: 2
+    interval: 5m
+  superslapbaka:
+    mode: drop
+    level: user
+    limit: 2
+    interval: 5m
