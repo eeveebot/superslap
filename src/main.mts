@@ -394,16 +394,20 @@ function getRandomTarget(
     hostname: string;
     modes: string[];
   }>,
-  config: SuperslapRootConfig
+  config: SuperslapRootConfig,
+  botNick: string
 ): string {
-  // Filter out invulnerable users
+  // Filter out invulnerable users and the bot itself
   const vulnerableUsers = users.filter(
-    (user) => isVulnerableUser(user, config) && user.nick !== fromUser
+    (user) =>
+      isVulnerableUser(user, config) &&
+      user.nick !== fromUser &&
+      user.nick !== botNick
   );
 
-  // If no vulnerable users left, return the sender (they can target themselves)
+  // If no vulnerable users left, return the sender only if it's not the bot
   if (vulnerableUsers.length === 0) {
-    return fromUser;
+    return fromUser !== botNick ? fromUser : botNick;
   }
 
   // If there's a potential target in the message
@@ -421,8 +425,8 @@ function getRandomTarget(
         return targetUser.nick;
       }
     }
-    // Attack the caster
-    else if (action === 1) {
+    // Attack the caster (only if it's not the bot)
+    else if (action === 1 && fromUser !== botNick) {
       return fromUser;
     }
     // Else, use the default behavior
@@ -533,7 +537,8 @@ const slapanusCommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Queue actions
@@ -608,7 +613,13 @@ const superslapanusCommandSub = nats.subscribe(
       const filteredUsers = users.filter((user) => user.nick !== data.botNick);
 
       // Pick a random target
-      const target = getRandomTarget(data.user, data.text, filteredUsers, superslapConfig);
+      const target = getRandomTarget(
+        data.user,
+        data.text,
+        filteredUsers,
+        superslapConfig,
+        data.botNick
+      );
 
       // Queue actions
       const messages = [
@@ -718,7 +729,8 @@ const superslapanusv2CommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Queue actions
@@ -829,7 +841,8 @@ const superslapaniggasanusCommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Queue actions
@@ -940,7 +953,8 @@ const supersuckurdickCommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Queue actions
@@ -1046,7 +1060,8 @@ const superslapsiestaCommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Pick a random slap message
@@ -1160,7 +1175,8 @@ const superslapbakaCommandSub = nats.subscribe(
         data.user,
         data.text,
         filteredUsers,
-        superslapConfig
+        superslapConfig,
+        data.botNick
       );
 
       // Queue actions
