@@ -464,13 +464,13 @@ function sendDelayedMessages(
               network: data['network'],
               instance: data['instance'],
               platform: data['platform'],
-              target: target,
+              nick: target,
               reason: reason,
               trace: data['trace'],
               type: 'kick.outgoing',
             };
 
-            const kickTopic = `chat.kick.outgoing.${data['platform']}.${data['instance']}.${channel}`;
+            const kickTopic = `control.chatConnectors.${data['platform']}.${data['instance']}`;
             void nats.publish(kickTopic, JSON.stringify(kickMsg));
           }
         }
