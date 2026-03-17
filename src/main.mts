@@ -461,14 +461,12 @@ function sendDelayedMessages(
             const reason = parts.slice(3).join(' ').substring(1); // Remove the colon
 
             const kickMsg = {
-              channel: channel,
-              network: data['network'],
-              instance: data['instance'],
-              platform: data['platform'],
-              nick: target,
-              reason: reason,
-              trace: data['trace'],
-              type: 'kick.outgoing',
+              action: 'kick',
+              data: {
+                channel: channel,
+                nick: target,
+                reason: reason,
+              },
             };
 
             const kickTopic = `control.chatConnectors.${data['platform']}.${data['instance']}`;
@@ -1211,17 +1209,15 @@ const superslapbakaCommandSub = nats.subscribe(
       // Send kick command
       setTimeout(() => {
         const kickMsg = {
-          channel: data.channel,
-          network: data.network,
-          instance: data.instance,
-          platform: data.platform,
-          target: target,
-          reason: 'SUPAAOSHIRISUPAAOSHIRISUUPAOSHIRISUUPAOSHIRISUUPAOSHIRI',
-          trace: data.trace,
-          type: 'kick.outgoing',
+          action: 'kick',
+          data: {
+            channel: data.channel,
+            nick: target,
+            reason: 'SUPAAOSHIRISUPAAOSHIRISUUPAOSHIRISUUPAOSHIRISUUPAOSHIRI',
+          },
         };
 
-        const kickTopic = `chat.kick.outgoing.${data.platform}.${data.instance}.${data.channel}`;
+        const kickTopic = `control.chatConnectors.${data.platform}.${data.instance}`;
         void nats.publish(kickTopic, JSON.stringify(kickMsg));
       }, 12000);
     } catch (error) {
