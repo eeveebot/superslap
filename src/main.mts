@@ -4,6 +4,7 @@
 // Implements various slap commands targeting users in a channel
 
 import { NatsClient, log } from '@eeveebot/libeevee';
+import { randomUUID } from 'node:crypto';
 import { loadSuperslapConfig } from './lib/config-loader.mjs';
 import { SuperslapRootConfig } from './types/config.types.mjs';
 
@@ -273,7 +274,7 @@ async function getUsersInChannel(
 > {
   return new Promise((resolve, reject) => {
     // Generate a unique reply channel
-    const replyChannel = `superslap.userlist.reply.${Date.now()}.${Math.random().toString(36).substr(2, 9)}`;
+    const replyChannel = `superslap.userlist.reply.${randomUUID()}`;
 
     // Set up timeout
     const timeout = setTimeout(() => {
