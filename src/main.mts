@@ -108,7 +108,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^slapanus\\s*',
+    regex: '^slapanus ',
     platformPrefixAllowed: true,
     ratelimit: slapanusRateLimit,
   };
@@ -123,7 +123,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^superslapanus\\s*',
+    regex: '^superslapanus ',
     platformPrefixAllowed: true,
     ratelimit: superslapanusRateLimit,
   };
@@ -138,7 +138,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^superslapanusv2\\s*',
+    regex: '^superslapanusv2 ',
     platformPrefixAllowed: true,
     ratelimit: superslapanusv2RateLimit,
   };
@@ -153,7 +153,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^supersuckurdick\\s*',
+    regex: '^supersuckurdick ',
     platformPrefixAllowed: true,
     ratelimit: supersuckurdickRateLimit,
   };
@@ -168,7 +168,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^superslapaniggasanus\\s*',
+    regex: '^superslapaniggasanus ',
     platformPrefixAllowed: true,
     ratelimit: superslapaniggasanusRateLimit,
   };
@@ -183,7 +183,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^superslapsiesta\\s*',
+    regex: '^superslapsiesta ',
     platformPrefixAllowed: true,
     ratelimit: superslapsiestaRateLimit,
   };
@@ -198,7 +198,7 @@ async function registerSuperslapCommands(): Promise<void> {
     instance: '.*',
     channel: '.*',
     user: '.*',
-    regex: '^superslapbaka\\s*',
+    regex: '^superslapbaka ',
     platformPrefixAllowed: true,
     ratelimit: superslapbakaRateLimit,
   };
