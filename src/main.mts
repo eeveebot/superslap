@@ -3,13 +3,28 @@
 // Superslap module
 // Implements various slap commands targeting users in a channel
 
-import { NatsClient, log } from '@eeveebot/libeevee';
-import { randomUUID } from 'node:crypto';
+import {
+  NatsClient,
+  log,
+  createNatsConnection,
+  registerGracefulShutdown,
+  createModuleMetrics,
+  loadModuleConfig,
+  RateLimitConfig,
+  defaultRateLimit,
+  registerCommand,
+  sendChatMessage,
+  registerHelp,
+  HelpEntry,
+  registerStatsHandlers,
+  queryChannelUsers,
+} from '@eeveebot/libeevee';
 import { loadSuperslapConfig } from './lib/config-loader.mjs';
 import { SuperslapRootConfig } from './types/config.types.mjs';
 
 // Record module startup time for uptime tracking
 const moduleStartTime = Date.now();
+const metrics = createModuleMetrics('superslap');
 
 // Command UUIDs
 const slapanusCommandUUID = '6771387c-5e25-4758-bdf2-adedcd3d5272';
@@ -24,41 +39,13 @@ const natsClients: Array<InstanceType<typeof NatsClient>> = [];
 const natsSubscriptions: Array<Promise<string | boolean>> = [];
 
 //
-// Do whatever teardown is necessary before calling common handler
-process.on('SIGINT', () => {
-  natsClients.forEach((natsClient) => {
-    void natsClient.drain();
-  });
-});
-
-process.on('SIGTERM', () => {
-  natsClients.forEach((natsClient) => {
-    void natsClient.drain();
-  });
-});
+// Register graceful shutdown handler
+registerGracefulShutdown(natsClients);
 
 //
 // Setup NATS connection
-
-// Get host and token
-const natsHost = process.env.NATS_HOST || false;
-if (!natsHost) {
-  const msg = 'environment variable NATS_HOST is not set.';
-  throw new Error(msg);
-}
-
-const natsToken = process.env.NATS_TOKEN || false;
-if (!natsToken) {
-  const msg = 'environment variable NATS_TOKEN is not set.';
-  throw new Error(msg);
-}
-
-const nats = new NatsClient({
-  natsHost: natsHost as string,
-  natsToken: natsToken as string,
-});
+const nats = await createNatsConnection();
 natsClients.push(nats);
-await nats.connect();
 
 // Load superslap configuration
 let superslapConfig: SuperslapRootConfig;
@@ -72,272 +59,54 @@ try {
   throw error;
 }
 
-// Function to register all superslap commands with the router
-async function registerSuperslapCommands(): Promise<void> {
-  // Default rate limit configuration
-  const defaultRateLimit = {
-    mode: 'drop',
-    level: 'user',
-    limit: 3,
-    interval: '1m',
-  };
-
-  // Use configured rate limits or defaults
-  const slapanusRateLimit =
-    superslapConfig.ratelimits?.slapanus || defaultRateLimit;
-  const superslapanusRateLimit =
-    superslapConfig.ratelimits?.superslapanus || defaultRateLimit;
-  const superslapanusv2RateLimit =
-    superslapConfig.ratelimits?.superslapanusv2 || defaultRateLimit;
-  const supersuckurdickRateLimit =
-    superslapConfig.ratelimits?.supersuckurdick || defaultRateLimit;
-  const superslapaniggasanusRateLimit =
-    superslapConfig.ratelimits?.superslapaniggasanus || defaultRateLimit;
-  const superslapsiestaRateLimit =
-    superslapConfig.ratelimits?.superslapsiesta || defaultRateLimit;
-  const superslapbakaRateLimit =
-    superslapConfig.ratelimits?.superslapbaka || defaultRateLimit;
-
-  // Register slapanus command
-  const slapanusCommandRegistration = {
-    type: 'command.register',
+// Register all superslap commands using registerCommand helper
+const commandRegistrations = await Promise.all([
+  registerCommand(nats, {
     commandUUID: slapanusCommandUUID,
     commandDisplayName: 'slapanus',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^slapanus ',
-    platformPrefixAllowed: true,
-    ratelimit: slapanusRateLimit,
-  };
-
-  // Register superslapanus command
-  const superslapanusCommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.slapanus || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: superslapanusCommandUUID,
     commandDisplayName: 'superslapanus',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^superslapanus ',
-    platformPrefixAllowed: true,
-    ratelimit: superslapanusRateLimit,
-  };
-
-  // Register superslapanusv2 command
-  const superslapanusv2CommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.superslapanus || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: superslapanusv2CommandUUID,
     commandDisplayName: 'superslapanusv2',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^superslapanusv2 ',
-    platformPrefixAllowed: true,
-    ratelimit: superslapanusv2RateLimit,
-  };
-
-  // Register supersuckurdick command
-  const supersuckurdickCommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.superslapanusv2 || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: supersuckurdickCommandUUID,
     commandDisplayName: 'supersuckurdick',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^supersuckurdick ',
-    platformPrefixAllowed: true,
-    ratelimit: supersuckurdickRateLimit,
-  };
-
-  // Register superslapaniggasanus command
-  const superslapaniggasanusCommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.supersuckurdick || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: superslapaniggasanusCommandUUID,
     commandDisplayName: 'superslapaniggasanus',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^superslapaniggasanus ',
-    platformPrefixAllowed: true,
-    ratelimit: superslapaniggasanusRateLimit,
-  };
-
-  // Register superslapsiesta command
-  const superslapsiestaCommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.superslapaniggasanus || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: superslapsiestaCommandUUID,
     commandDisplayName: 'superslapsiesta',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^superslapsiesta ',
-    platformPrefixAllowed: true,
-    ratelimit: superslapsiestaRateLimit,
-  };
-
-  // Register superslapbaka command
-  const superslapbakaCommandRegistration = {
-    type: 'command.register',
+    ratelimit: superslapConfig.ratelimits?.superslapsiesta || defaultRateLimit,
+  }, metrics),
+  registerCommand(nats, {
     commandUUID: superslapbakaCommandUUID,
     commandDisplayName: 'superslapbaka',
-    platform: '.*',
-    network: '.*',
-    instance: '.*',
-    channel: '.*',
-    user: '.*',
     regex: '^superslapbaka ',
-    platformPrefixAllowed: true,
-    ratelimit: superslapbakaRateLimit,
-  };
-
-  try {
-    await nats.publish(
-      'command.register',
-      JSON.stringify(slapanusCommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(superslapanusCommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(superslapanusv2CommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(supersuckurdickCommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(superslapaniggasanusCommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(superslapsiestaCommandRegistration)
-    );
-    await nats.publish(
-      'command.register',
-      JSON.stringify(superslapbakaCommandRegistration)
-    );
-    log.info('Registered all superslap commands with router', {
-      producer: 'superslap',
-    });
-  } catch (error) {
-    log.error('Failed to register superslap commands', {
-      producer: 'superslap',
-      error: error,
-    });
-  }
-}
-
-// Register commands at startup
-await registerSuperslapCommands();
+    ratelimit: superslapConfig.ratelimits?.superslapbaka || defaultRateLimit,
+  }, metrics),
+]);
+commandRegistrations.flat().forEach((sub) => natsSubscriptions.push(sub));
 
 // Global map to store pending user list requests
-const pendingUserRequests = new Map<
-  string,
-  {
-    resolve: (
-      users: Array<{
-        nick: string;
-        ident: string;
-        hostname: string;
-        modes: string[];
-      }>
-    ) => void;
-    reject: (error: Error) => void;
-    timeout: NodeJS.Timeout;
-  }
->();
-
-// Helper function to get users in a channel by querying the IRC connector
-async function getUsersInChannel(
-  platform: string,
-  instance: string,
-  channel: string,
-  nats: InstanceType<typeof NatsClient>
-): Promise<
-  Array<{ nick: string; ident: string; hostname: string; modes: string[] }>
-> {
-  return new Promise((resolve, reject) => {
-    // Generate a unique reply channel
-    const replyChannel = `superslap.userlist.reply.${randomUUID()}`;
-
-    // Set up timeout
-    const timeout = setTimeout(() => {
-      // Clean up the pending request
-      pendingUserRequests.delete(replyChannel);
-
-      reject(new Error('Timeout waiting for user list'));
-    }, 5000); // 5 second timeout
-
-    // Store the promise resolver
-    pendingUserRequests.set(replyChannel, { resolve, reject, timeout });
-
-    // Subscribe to the reply channel
-    void nats
-      .subscribe(replyChannel, (subject, message) => {
-        try {
-          // Clean up the pending request
-          const request = pendingUserRequests.get(replyChannel);
-          if (request) {
-            clearTimeout(request.timeout);
-            pendingUserRequests.delete(replyChannel);
-          }
-
-          // Parse the response
-          const response = JSON.parse(message.string());
-
-          // Check if there was an error
-          if (response.error) {
-            reject(new Error(response.error));
-            return;
-          }
-
-          // Return full user objects with hostmask information
-          resolve(response.users);
-        } catch (error) {
-          log.error('Failed to process user list response', {
-            producer: 'superslap',
-            error: error instanceof Error ? error.message : String(error),
-          });
-          reject(error instanceof Error ? error : new Error(String(error)));
-        }
-      })
-      .catch((error) => {
-        log.error('Failed to subscribe to user list reply channel', {
-          producer: 'superslap',
-          error: error instanceof Error ? error.message : String(error),
-        });
-        reject(error instanceof Error ? error : new Error(String(error)));
-      });
-
-    // Send the control command to the IRC connector
-    const controlMessage = {
-      action: 'list-users-in-channel',
-      data: {
-        channel: channel,
-        replyChannel: replyChannel,
-      },
-    };
-
-    const controlTopic = `control.chatConnectors.${platform}.${instance}`;
-    void nats.publish(controlTopic, JSON.stringify(controlMessage));
-  });
-}
 
 // Helper function to check if a user is vulnerable (not invulnerable according to config)
 function isVulnerableUser(
@@ -476,18 +245,14 @@ function sendDelayedMessages(
         return;
       }
 
-      const response = {
-        channel: data['channel'],
-        network: data['network'],
-        instance: data['instance'],
-        platform: data['platform'],
+      void sendChatMessage(nats, {
+        channel: data['channel'] as string,
+        network: data['network'] as string,
+        instance: data['instance'] as string,
+        platform: data['platform'] as string,
         text: text,
-        trace: data['trace'],
-        type: type === 'action' ? 'action.outgoing' : 'message.outgoing',
-      };
-
-      const outgoingTopic = `chat.${type === 'action' ? 'action' : 'message'}.outgoing.${data['platform']}.${data['instance']}.${data['channel']}`;
-      void nats.publish(outgoingTopic, JSON.stringify(response));
+        trace: data['trace'] as string,
+      }, metrics, type === 'action' ? 'action.outgoing' : 'message.outgoing');
     }, delay);
   });
 }
@@ -514,11 +279,12 @@ const slapanusCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -594,11 +360,12 @@ const superslapanusCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -683,18 +450,14 @@ const superslapanusv2CommandSub = nats.subscribe(
           superslapConfig
         )
       ) {
-        const errorMsg = {
+        void sendChatMessage(nats, {
           channel: data.channel,
           network: data.network,
           instance: data.instance,
           platform: data.platform,
           text: 'You clearly take your moderation duties very seriously',
           trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
+        }, metrics);
         return;
       }
 
@@ -706,11 +469,12 @@ const superslapanusv2CommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -795,18 +559,14 @@ const superslapaniggasanusCommandSub = nats.subscribe(
           superslapConfig
         )
       ) {
-        const errorMsg = {
+        void sendChatMessage(nats, {
           channel: data.channel,
           network: data.network,
           instance: data.instance,
           platform: data.platform,
           text: 'Fuck da police',
           trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
+        }, metrics);
         return;
       }
 
@@ -818,11 +578,12 @@ const superslapaniggasanusCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -907,18 +668,14 @@ const supersuckurdickCommandSub = nats.subscribe(
           superslapConfig
         )
       ) {
-        const errorMsg = {
+        void sendChatMessage(nats, {
           channel: data.channel,
           network: data.network,
           instance: data.instance,
           platform: data.platform,
           text: 'Super suck your own dick',
           trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
+        }, metrics);
         return;
       }
 
@@ -930,11 +687,12 @@ const supersuckurdickCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -1014,18 +772,14 @@ const superslapsiestaCommandSub = nats.subscribe(
           superslapConfig
         )
       ) {
-        const errorMsg = {
+        void sendChatMessage(nats, {
           channel: data.channel,
           network: data.network,
           instance: data.instance,
           platform: data.platform,
           text: '¡Abuso del moderador!',
           trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
+        }, metrics);
         return;
       }
 
@@ -1037,11 +791,12 @@ const superslapsiestaCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -1129,18 +884,14 @@ const superslapbakaCommandSub = nats.subscribe(
           superslapConfig
         )
       ) {
-        const errorMsg = {
+        void sendChatMessage(nats, {
           channel: data.channel,
           network: data.network,
           instance: data.instance,
           platform: data.platform,
           text: 'Anata wa baka desu',
           trace: data.trace,
-          type: 'message.outgoing',
-        };
-
-        const outgoingTopic = `chat.message.outgoing.${data.platform}.${data.instance}.${data.channel}`;
-        void nats.publish(outgoingTopic, JSON.stringify(errorMsg));
+        }, metrics);
         return;
       }
 
@@ -1152,11 +903,12 @@ const superslapbakaCommandSub = nats.subscribe(
         modes: string[];
       }> = [];
       try {
-        users = await getUsersInChannel(
+        users = await queryChannelUsers(
+          nats,
           data.platform,
           data.instance,
           data.channel,
-          nats
+          { metrics, producer: 'superslap' }
         );
       } catch (error) {
         log.error('Failed to get user list', {
@@ -1238,51 +990,14 @@ const spanishSlaps = [
   '\x03¡\x09S\x10Ú\x11P\x02E\x12R \x06B\x13O\x05F\x04E\x07T\x08A\x03D\x09A \x10A\x11N\x02O \x12N\x06O \x13M\x05Á\x04S \x07L\x08E\x03C\x09H\x10E \x11M\x02A\x12T\x06E\x13R\x05N\x04A\x07!',
 ];
 
-// Subscribe to control messages for re-registering commands
-const controlSubRegisterCommandAll = nats.subscribe(
-  'control.registerCommands',
-  () => {
-    log.info('Received control.registerCommands control message', {
-      producer: 'superslap',
-    });
-    void registerSuperslapCommands();
-  }
-);
-natsSubscriptions.push(controlSubRegisterCommandAll);
+// Note: control.registerCommands subscriptions are now handled by registerCommand() above
 
-// Subscribe to stats.uptime messages and respond with module uptime
-const statsUptimeSub = nats.subscribe('stats.uptime', (subject, message) => {
-  try {
-    const data = JSON.parse(message.string());
-    log.info('Received stats.uptime request', {
-      producer: 'superslap',
-      replyChannel: data.replyChannel,
-    });
-
-    // Calculate uptime in milliseconds
-    const uptime = Date.now() - moduleStartTime;
-
-    // Send uptime back via the ephemeral reply channel
-    const uptimeResponse = {
-      module: 'superslap',
-      uptime: uptime,
-      uptimeFormatted: `${Math.floor(uptime / 86400000)}d ${Math.floor((uptime % 86400000) / 3600000)}h ${Math.floor((uptime % 3600000) / 60000)}m ${Math.floor((uptime % 60000) / 1000)}s`,
-    };
-
-    if (data.replyChannel) {
-      void nats.publish(data.replyChannel, JSON.stringify(uptimeResponse));
-    }
-  } catch (error) {
-    log.error('Failed to process stats.uptime request', {
-      producer: 'superslap',
-      error: error,
-    });
-  }
-});
-natsSubscriptions.push(statsUptimeSub);
+// Subscribe to stats.uptime and stats.emit.request
+const statsSubs = registerStatsHandlers({ nats, moduleName: 'superslap', startTime: moduleStartTime, metrics });
+natsSubscriptions.push(...statsSubs);
 
 // Help information for superslap commands
-const superslapHelp = [
+const superslapHelp: HelpEntry[] = [
   {
     command: 'slapanus',
     descr: "Casually slaps a random user's anus",
@@ -1320,34 +1035,6 @@ const superslapHelp = [
   },
 ];
 
-// Function to publish help information
-async function publishHelp(): Promise<void> {
-  const helpUpdate = {
-    from: 'superslap',
-    help: superslapHelp,
-  };
-
-  try {
-    await nats.publish('help.update', JSON.stringify(helpUpdate));
-    log.info('Published superslap help information', {
-      producer: 'superslap',
-    });
-  } catch (error) {
-    log.error('Failed to publish superslap help information', {
-      producer: 'superslap',
-      error: error,
-    });
-  }
-}
-
-// Publish help information at startup
-await publishHelp();
-
-// Subscribe to help update requests
-const helpUpdateRequestSub = nats.subscribe('help.updateRequest', () => {
-  log.info('Received help.updateRequest message', {
-    producer: 'superslap',
-  });
-  void publishHelp();
-});
-natsSubscriptions.push(helpUpdateRequestSub);
+// Register help information using registerHelp helper
+const helpSubs = await registerHelp(nats, 'superslap', superslapHelp, metrics);
+helpSubs.forEach((sub) => natsSubscriptions.push(sub));
