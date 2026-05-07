@@ -9,8 +9,6 @@ import {
   createNatsConnection,
   registerGracefulShutdown,
   createModuleMetrics,
-  loadModuleConfig,
-  RateLimitConfig,
   defaultRateLimit,
   registerCommand,
   sendChatMessage,
