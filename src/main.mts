@@ -398,7 +398,7 @@ const superslapanusCommandSub = nats.subscribe(
         {
           delay: 1000,
           type: 'say' as const,
-          text: "\x034\x02IT'S \x033S\x08U\x07P\x03E\x06R\x0c!\x09!\x08 \x034ANUS SLAPPING TIME!",
+          text: "\x034\x02IT'S \x033S\x038U\x0311P\x034E\x036R\x0312!\x039!\x038 \x034ANUS SLAPPING TIME!",
         },
         {
           delay: 3000,
@@ -410,12 +410,12 @@ const superslapanusCommandSub = nats.subscribe(
         {
           delay: 10000,
           type: 'action' as const,
-          text: `\x02\x033S\x08U\x07P\x03E\x06R\x0c!\x09!\x08\x03 slaps ${target}'s anus!!`,
+          text: `\x02\x033S\x038U\x0311P\x034E\x036R\x0312!\x039!\x038\x03 slaps ${target}'s anus!!`,
         },
         {
           delay: 12000,
           type: 'raw' as const,
-          text: `KICK ${data.channel} ${target} :\x033S\x08U\x07P\x03E\x06R\x0cA\x09N\x08A\x03L\x06S\x0cU\x07P\x03E\x06R\x0cA\x09N\x08A\x03L\x06S\x0cU\x07P\x03E\x06R\x0cA\x09N\x08A\x03L\x06S\x0cU\x07P\x03E\x06R\x0cA\x09N\x08A\x03L`,
+          text: `KICK ${data.channel} ${target} :\x033S\x038U\x0311P\x034E\x036R\x0310A\x039N\x038A\x034L\x033S\x038U\x0311P\x034E\x036R\x0310A\x039N\x038A\x034L\x033S\x038U\x0311P\x034E\x036R\x0310A\x039N\x038A\x034L\x033S\x038U\x0311P\x034E\x036R\x0310A\x039N\x038A\x034L`,
         },
       ];
 
@@ -507,7 +507,7 @@ const superslapanusv2CommandSub = nats.subscribe(
         {
           delay: 1000,
           type: 'say' as const,
-          text: '\x06,4I\x13,07T\x12,08S\x03,09 \x08,12S\x07,13U\x04,06P\x06,04E\x13,07R\x12,08 \x03,09S\x08,12L\x07,13A\x04,06P\x06,04 \x13,07A\x12,08N\x03,09U\x08,12S\x07,13 \x04,06v\x06,042\x13,07 \x12,08!\x03,09!\x08,12!\x07,13!\x04,06!\x06,04!\x13,07!\x12,08!\x03,09!',
+          text: '\x036,4I\x0313,07T\x0312,08S\x033,09 \x038,12S\x037,13U\x034,06P\x036,04E\x0313,07R\x0312,08 \x033,09S\x038,12L\x037,13A\x034,06P\x036,04 \x0313,07A\x0312,08N\x033,09U\x038,12S\x037,13 \x034,06v\x036,042\x0313,07 \x0312,08!\x033,09!\x038,12!\x037,13!\x034,06!\x036,04!\x0313,07!\x0312,08!\x033,09!',
         },
         {
           delay: 3000,
@@ -519,12 +519,12 @@ const superslapanusv2CommandSub = nats.subscribe(
         {
           delay: 10000,
           type: 'action' as const,
-          text: `\x02 \x06,4S\x13,07U\x12,08P\x03,09E\x08,12R\x07,13 \x04,06 slaps ${target}'s anus!!!!`,
+          text: `\x02 \x036,4S\x0313,07U\x0312,08P\x033,09E\x038,12R\x03 slaps ${target}'s anus!!!!`,
         },
         {
           delay: 12000,
           type: 'raw' as const,
-          text: `KICK ${data.channel} ${target} :\x06,4S\x13,07U\x12,08P\x03,09E\x08,12R\x07,13A\x04,06N\x06,04A\x13,07L\x12,08S\x03,09U\x08,12P\x07,13E\x04,06R\x06,04A\x13,07N\x12,08A\x03,09L\x08,12S\x07,13U\x04,06P\x06,04E\x13,07R\x12,08A\x03,09N\x08,12A\x07,13L`,
+          text: `KICK ${data.channel} ${target} :\x036,4S\x0313,07U\x0312,08P\x033,09E\x038,12R\x037,13A\x034,06N\x036,04A\x0313,07L\x0312,08S\x033,09U\x038,12P\x037,13E\x034,06R\x036,04A\x0313,07N\x0312,08A\x033,09L\x038,12S\x037,13U\x034,06P\x036,04E\x0313,07R\x0312,08A\x033,09N\x038,12A\x037,13L\x034,06S\x036,04U\x0313,07P\x0312,08E\x033,09R\x038,12A\x037,13N\x034,06A\x036,04L\x0313,07S\x0312,08U\x033,09P\x038,12E\x037,13R\x034,06A\x036,04N\x0313,07A\x0312,08L\x033,09S\x038,12U\x037,13P\x034,06E\x036,04R\x0313,07A\x0312,08N\x033,09A\x038,12L`,
         },
       ];
 
@@ -725,7 +725,7 @@ const supersuckurdickCommandSub = nats.subscribe(
         {
           delay: 1000,
           type: 'say' as const,
-          text: "\x039\x02IT'S \x033S\x08U\x07P\x03E\x06R\x0c!\x09!\x08 \x039SUCK UR DICK TIME!",
+          text: "\x039\x02IT'S \x033S\x038U\x0311P\x034E\x036R\x0312!\x039!\x038 \x039SUCK UR DICK TIME!",
         },
         {
           delay: 3000,
@@ -737,7 +737,7 @@ const supersuckurdickCommandSub = nats.subscribe(
         {
           delay: 12000,
           type: 'raw' as const,
-          text: `KICK ${data.channel} ${target} :\x033S\x08U\x07P\x03E\x06R\x0cC\x09O\x08C\x03K\x06S\x0cU\x07P\x03E\x06R\x0cC\x09O\x08C\x03K\x06S\x0cU\x07P\x03E\x06R\x0cC\x09O\x08C\x03K\x06S\x0cU\x07P\x03E\x06R\x0cC\x09O\x08C\x03K\x06S\x0cU\x07P\x03E\x06R\x0cC\x09O\x08C\x03K`,
+          text: `KICK ${data.channel} ${target} :\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K`,
         },
       ];
 
@@ -832,7 +832,7 @@ const superslapsiestaCommandSub = nats.subscribe(
         {
           delay: 1000,
           type: 'say' as const,
-          text: '\x04\x02¡SU ANO \x10S\x11Ú\x02P\x12E\x06R\x13 \x04BOFETADA TIEMPO!',
+          text: '\x034\x02¡SU ANO \x0310S\x0311Ú\x0302P\x0312E\x0306R\x0f\x034 BOFETADA TIEMPO!',
         },
         {
           delay: 3000,
@@ -844,7 +844,7 @@ const superslapsiestaCommandSub = nats.subscribe(
         {
           delay: 10000,
           type: 'action' as const,
-          text: `\x05S\x04Ú\x07P\x08E\x03R\x0f abofetea ${target} ano!!`,
+          text: `\x0305S\x0304Ú\x0307P\x0308E\x0303R\x0f abofetea ${target} ano!!`,
         },
         {
           delay: 12000,
@@ -990,10 +990,10 @@ natsSubscriptions.push(superslapbakaCommandSub);
 
 // Spanish slap messages
 const spanishSlaps = [
-  '\x11¡\x02S\x12Ú\x06P\x13E\x05R \x04B\x07O\x08F\x03E\x09T\x10A\x11D\x02A \x12A\x06N\x13O \x05N\x04O \x07M\x08Á\x03S \x09L\x10E\x11C\x02H\x12E \x06M\x13A\x05T\x04E\x07R\x08N\x03A\x09!',
-  '\x10¡\x11S\x02Ú\x12P\x06E\x13R \x05B\x04O\x07F\x08E\x03T\x09A\x10D\x11A \x02A\x12N\x06O \x13N\x05O \x04M\x07Á\x08S \x03L\x09E\x10C\x11H\x02E \x12M\x06A\x13T\x05E\x04R\x07N\x08A\x03!',
-  '\x09¡\x10S\x11Ú\x02P\x12E\x06R \x13B\x05O\x04F\x07E\x08T\x03A\x09D\x10A \x11A\x02N\x12O \x06N\x13O \x05M\x04Á\x07S \x08L\x03E\x09C\x10H\x11E \x02M\x12A\x06T\x13E\x05R\x04N\x07A\x08!',
-  '\x03¡\x09S\x10Ú\x11P\x02E\x12R \x06B\x13O\x05F\x04E\x07T\x08A\x03D\x09A \x10A\x11N\x02O \x12N\x06O \x13M\x05Á\x04S \x07L\x08E\x03C\x09H\x10E \x11M\x02A\x12T\x06E\x13R\x05N\x04A\x07!',
+  '\x0311¡\x0302S\x0312Ú\x0306P\x0313E\x0305R \x0304B\x0307O\x0308F\x0303E\x0309T\x0310A\x0311D\x0302A \x0312A\x0306N\x0313O \x0305N\x0304O \x0307M\x0308Á\x0303S \x0309L\x0310E\x0311C\x0302H\x0312E \x0306M\x0313A\x0305T\x0304E\x0307R\x0308N\x0303A\x0309!',
+  '\x0310¡\x0311S\x0302Ú\x0312P\x0306E\x0313R \x0305B\x0304O\x0307F\x0308E\x0303T\x0309A\x0310D\x0311A \x0302A\x0312N\x0306O \x0313N\x0305O \x0304M\x0307Á\x0308S \x0303L\x0309E\x0310C\x0311H\x0302E \x0312M\x0306A\x0313T\x0305E\x0304R\x0307N\x0308A\x0303!',
+  '\x0309¡\x0310S\x0311Ú\x0302P\x0312E\x0306R \x0313B\x0305O\x0304F\x0307E\x0308T\x0303A\x0309D\x0310A \x0311A\x0302N\x0312O \x0306N\x0313O \x0305M\x0304Á\x0307S \x0308L\x0303E\x0309C\x0310H\x0311E \x0302M\x0312A\x0306T\x0313E\x0305R\x0304N\x0307A\x0308!',
+  '\x0303¡\x0309S\x0310Ú\x0311P\x0302E\x0312R \x0306B\x0313O\x0305F\x0304E\x0307T\x0308A\x0303D\x0309A \x0310A\x0311N\x0302O \x0312N\x0306O \x0313M\x0305Á\x0304S \x0307L\x0308E\x0303C\x0309H\x0310E\x0311M\x0302A\x0312T\x0306E\x0313R\x0305N\x0304A\x0307!',
 ];
 
 // Note: control.registerCommands subscriptions are now handled by registerCommand() above
