@@ -76,7 +76,7 @@ const commandRegistrations = await Promise.all([
   registerCommand(nats, {
     commandUUID: superslapanusCommandUUID,
     commandDisplayName: 'superslapanus',
-    regex: '^superslapanus\\s*',
+    regex: '^superslapanus(?!\\w)\\s*',
     ratelimit: superslapConfig.ratelimits?.superslapanus || defaultRateLimit,
   }, metrics),
   registerCommand(nats, {
