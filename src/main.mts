@@ -17,7 +17,7 @@ import {
   registerStatsHandlers,
   queryChannelUsers,
 } from '@eeveebot/libeevee';
-import { loadSuperslapConfig } from './lib/config-loader.mjs';
+import { loadModuleConfig } from '@eeveebot/libeevee';
 import { SuperslapRootConfig } from './types/config.types.mjs';
 
 // Record module startup time for uptime tracking
@@ -45,16 +45,24 @@ registerGracefulShutdown(natsClients);
 const nats = await createNatsConnection();
 natsClients.push(nats);
 
-// Load superslap configuration
-let superslapConfig: SuperslapRootConfig;
-try {
-  superslapConfig = await loadSuperslapConfig();
-} catch (error) {
-  log.error('Failed to load superslap configuration', {
-    producer: 'superslap',
-    error: error instanceof Error ? error.message : String(error),
-  });
-  throw error;
+// Load superslap configuration with defaults merging
+const superslapConfig = loadModuleConfig<SuperslapRootConfig>({
+  invulnerableUsers: {
+    users: ['admin', 'moderator'],
+    hostmasks: [],
+  },
+  ratelimits: {},
+});
+
+// Merge defaults for partially-specified invulnerableUsers
+if (!superslapConfig.invulnerableUsers) {
+  superslapConfig.invulnerableUsers = {
+    users: ['admin', 'moderator'],
+    hostmasks: [],
+  };
+} else {
+  superslapConfig.invulnerableUsers.users ??= ['admin', 'moderator'];
+  superslapConfig.invulnerableUsers.hostmasks ??= [];
 }
 
 // Register all superslap commands using registerCommand helper
