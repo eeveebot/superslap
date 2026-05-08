@@ -16,6 +16,8 @@ import {
   HelpEntry,
   registerStatsHandlers,
   queryChannelUsers,
+  initializeSystemMetrics,
+  setupHttpServer,
 } from '@eeveebot/libeevee';
 import { loadModuleConfig } from '@eeveebot/libeevee';
 import { SuperslapRootConfig } from './types/config.types.mjs';
@@ -35,6 +37,16 @@ const superslapbakaCommandUUID = 'c3104b60-8278-481f-8bbf-db109147abf7';
 
 const natsClients: Array<InstanceType<typeof NatsClient>> = [];
 const natsSubscriptions: Array<Promise<string | boolean>> = [];
+
+// Initialize system metrics
+initializeSystemMetrics('superslap');
+
+// Setup HTTP server for metrics and health checks
+setupHttpServer({
+  port: process.env.HTTP_API_PORT || '9000',
+  serviceName: 'superslap',
+  natsClients: natsClients,
+});
 
 //
 // Register graceful shutdown handler
