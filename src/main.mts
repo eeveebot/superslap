@@ -18,6 +18,7 @@ import {
   queryChannelUsers,
   initializeSystemMetrics,
   setupHttpServer,
+  NatsSubscriptionResult,
 } from '@eeveebot/libeevee';
 import { loadModuleConfig } from '@eeveebot/libeevee';
 import { SuperslapRootConfig } from './types/config.types.mjs';
@@ -36,7 +37,7 @@ const superslapsiestaCommandUUID = '4398f1b5-6537-49bd-a9c2-7a90fa5e0d87';
 const superslapbakaCommandUUID = 'c3104b60-8278-481f-8bbf-db109147abf7';
 
 const natsClients: Array<InstanceType<typeof NatsClient>> = [];
-const natsSubscriptions: Array<Promise<string | boolean>> = [];
+const natsSubscriptions: Array<Promise<NatsSubscriptionResult>> = [];
 
 // Initialize system metrics
 initializeSystemMetrics('superslap');
