@@ -5,13 +5,11 @@
 
 import {
   NatsClient,
-  log,
   createNatsConnection,
   registerGracefulShutdown,
   createModuleMetrics,
   defaultRateLimit,
   registerCommand,
-  sendChatMessage,
   registerHelp,
   HelpEntry,
   registerStatsHandlers,
