@@ -26,9 +26,11 @@ import { handleSuperslapaniggasanusCommand } from './commands/superslapaniggasan
 import { handleSupersuckurdickCommand } from './commands/supersuckurdick.mjs';
 import { handleSuperslapsiestaCommand } from './commands/superslapsiesta.mjs';
 import { handleSuperslapbakaCommand } from './commands/superslapbaka.mjs';
+import fs from 'node:fs';
 
 // Record module startup time for uptime tracking
 const moduleStartTime = Date.now();
+const moduleVersion = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version as string;
 const metrics = createModuleMetrics('superslap');
 
 // Command UUIDs
@@ -104,7 +106,7 @@ natsSubscriptions.push(handleSuperslapbakaCommand({ nats, commandUUID: superslap
 // Note: control.registerCommands subscriptions are now handled by registerCommand() above
 
 // Subscribe to stats.uptime and stats.emit.request
-const statsSubs = registerStatsHandlers({ nats, moduleName: 'superslap', startTime: moduleStartTime, metrics });
+const statsSubs = registerStatsHandlers({ nats, moduleName: 'superslap', startTime: moduleStartTime, version: moduleVersion, metrics });
 natsSubscriptions.push(...statsSubs);
 
 // Help information for superslap commands
