@@ -44,7 +44,7 @@ export async function handleSuperslapaniggasanusCommand({
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: "\x031\x02IT'S SUPER SLAP A NIGGAS ANUS TIME!!!" },
-          { delay: 3000, type: 'say' as const, text: 'This nigga fishy \x02GETS BUCK\x02!' },
+          { delay: 3000, type: 'say' as const, text: `This nigga ${data.botNick} \x02GETS BUCK\x02!` },
           { delay: 6000, type: 'say' as const, text: 'What it do ...? ' },
           { delay: 8000, type: 'say' as const, text: `${target}!` },
           { delay: 10000, type: 'action' as const, text: `\x02 \x031\x02SUPER SLAPS ${target}'s BLACK ANUS!` },

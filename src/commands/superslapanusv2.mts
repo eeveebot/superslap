@@ -44,7 +44,7 @@ export async function handleSuperslapanusv2Command({
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: '\x036,4I\x0313,07T\x0312,08S\x033,09 \x038,12S\x037,13U\x034,06P\x036,04E\x0313,07R\x0312,08 \x033,09S\x038,12L\x037,13A\x034,06P\x036,04 \x0313,07A\x0312,08N\x033,09U\x038,12S\x037,13 \x034,06v\x036,042\x0313,07 \x0312,08!\x033,09!\x038,12!\x037,13!\x034,06!\x036,04!\x0313,07!\x0312,08!\x033,09!' },
-          { delay: 3000, type: 'say' as const, text: 'fishy spits onto the floor!' },
+          { delay: 3000, type: 'say' as const, text: `${data.botNick} spits onto the floor!` },
           { delay: 6000, type: 'say' as const, text: 'The saliva reads...' },
           { delay: 8000, type: 'say' as const, text: `${target}!` },
           { delay: 10000, type: 'action' as const, text: `\x02 \x036,4S\x0313,07U\x0312,08P\x033,09E\x038,12R\x03 slaps ${target}'s anus!!!!` },

@@ -54,7 +54,7 @@ export async function handleSlapanusCommand({
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: "\x034\x02It's Anus Slapping Time!" },
-          { delay: 3000, type: 'say' as const, text: 'fishy spits onto the floor!' },
+          { delay: 3000, type: 'say' as const, text: `${data.botNick} spits onto the floor!` },
           { delay: 6000, type: 'say' as const, text: 'The saliva reads...' },
           { delay: 8000, type: 'say' as const, text: `${target}!` },
           { delay: 10000, type: 'action' as const, text: `slaps\x02 ${target}'s\x02 anus!` },
