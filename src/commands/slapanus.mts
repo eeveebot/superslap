@@ -27,7 +27,7 @@ export async function handleSlapanusCommand({
           platform: data.platform,
           instance: data.instance,
           channel: data.channel,
-          user: data.user,
+          nick: data.nick,
         });
 
         let users: Array<{
@@ -50,7 +50,7 @@ export async function handleSlapanusCommand({
         }
 
         const filteredUsers = users.filter((user) => user.nick !== data.botNick);
-        const target = getRandomTarget(data.user, data.text, filteredUsers, config, data.botNick);
+        const target = getRandomTarget(data.nick, data.text, filteredUsers, config, data.botNick);
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: "\x034\x02It's Anus Slapping Time!" },

@@ -23,10 +23,10 @@ export async function handleSuperslapaniggasanusCommand({
       try {
         const data = JSON.parse(message.string());
         log.info('Received command.execute for superslapaniggasanus', {
-          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, user: data.user,
+          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, nick: data.nick,
         });
 
-        if (!isVulnerableUser({ nick: data.user, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
+        if (!isVulnerableUser({ nick: data.nick, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
           void sendChatMessage(nats, { channel: data.channel, network: data.network, instance: data.instance, platform: data.platform, text: 'Fuck da police', trace: data.trace }, metrics);
           return;
         }
@@ -40,7 +40,7 @@ export async function handleSuperslapaniggasanusCommand({
         }
 
         const filteredUsers = users.filter((user) => user.nick !== data.botNick);
-        const target = getRandomTarget(data.user, data.text, filteredUsers, config, data.botNick);
+        const target = getRandomTarget(data.nick, data.text, filteredUsers, config, data.botNick);
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: "\x031\x02IT'S SUPER SLAP A NIGGAS ANUS TIME!!!" },

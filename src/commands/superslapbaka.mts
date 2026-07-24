@@ -23,10 +23,10 @@ export async function handleSuperslapbakaCommand({
       try {
         const data = JSON.parse(message.string());
         log.info('Received command.execute for superslapbaka', {
-          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, user: data.user,
+          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, nick: data.nick,
         });
 
-        if (!isVulnerableUser({ nick: data.user, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
+        if (!isVulnerableUser({ nick: data.nick, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
           void sendChatMessage(nats, { channel: data.channel, network: data.network, instance: data.instance, platform: data.platform, text: 'Anata wa baka desu', trace: data.trace }, metrics);
           return;
         }
@@ -40,11 +40,11 @@ export async function handleSuperslapbakaCommand({
         }
 
         const filteredUsers = users.filter((user) => user.nick !== data.botNick);
-        const target = getRandomTarget(data.user, data.text, filteredUsers, config, data.botNick);
+        const target = getRandomTarget(data.nick, data.text, filteredUsers, config, data.botNick);
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: '\x04\x02Sūpa kōmon tataki no jikandesu!' },
-          { delay: 3000, type: 'say' as const, text: `${data.user} wa yuka ni haku!` },
+          { delay: 3000, type: 'say' as const, text: `${data.nick} wa yuka ni haku!` },
           { delay: 6000, type: 'say' as const, text: 'Daeki dokusho...' },
           { delay: 8000, type: 'say' as const, text: `${target}!` },
           { delay: 10000, type: 'action' as const, text: `wa SUUPAA!! ${target} no kōmon o tataku!!` },

@@ -23,10 +23,10 @@ export async function handleSuperslapanusv2Command({
       try {
         const data = JSON.parse(message.string());
         log.info('Received command.execute for superslapanusv2', {
-          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, user: data.user,
+          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, nick: data.nick,
         });
 
-        if (!isVulnerableUser({ nick: data.user, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
+        if (!isVulnerableUser({ nick: data.nick, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
           void sendChatMessage(nats, { channel: data.channel, network: data.network, instance: data.instance, platform: data.platform, text: 'You clearly take your moderation duties very seriously', trace: data.trace }, metrics);
           return;
         }
@@ -40,7 +40,7 @@ export async function handleSuperslapanusv2Command({
         }
 
         const filteredUsers = users.filter((user) => user.nick !== data.botNick);
-        const target = getRandomTarget(data.user, data.text, filteredUsers, config, data.botNick);
+        const target = getRandomTarget(data.nick, data.text, filteredUsers, config, data.botNick);
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: '\x036,4I\x0313,07T\x0312,08S\x033,09 \x038,12S\x037,13U\x034,06P\x036,04E\x0313,07R\x0312,08 \x033,09S\x038,12L\x037,13A\x034,06P\x036,04 \x0313,07A\x0312,08N\x033,09U\x038,12S\x037,13 \x034,06v\x036,042\x0313,07 \x0312,08!\x033,09!\x038,12!\x037,13!\x034,06!\x036,04!\x0313,07!\x0312,08!\x033,09!' },

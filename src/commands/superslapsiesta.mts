@@ -31,10 +31,10 @@ export async function handleSuperslapsiestaCommand({
       try {
         const data = JSON.parse(message.string());
         log.info('Received command.execute for superslapsiesta', {
-          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, user: data.user,
+          producer: 'superslap', platform: data.platform, instance: data.instance, channel: data.channel, nick: data.nick,
         });
 
-        if (!isVulnerableUser({ nick: data.user, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
+        if (!isVulnerableUser({ nick: data.nick, ident: '', hostname: data.userHost || '', modes: [] }, config)) {
           void sendChatMessage(nats, { channel: data.channel, network: data.network, instance: data.instance, platform: data.platform, text: '¡Abuso del moderador!', trace: data.trace }, metrics);
           return;
         }
@@ -48,12 +48,12 @@ export async function handleSuperslapsiestaCommand({
         }
 
         const filteredUsers = users.filter((user) => user.nick !== data.botNick);
-        const target = getRandomTarget(data.user, data.text, filteredUsers, config, data.botNick);
+        const target = getRandomTarget(data.nick, data.text, filteredUsers, config, data.botNick);
         const slapIndex = Math.floor(Math.random() * spanishSlaps.length);
 
         const messages = [
           { delay: 1000, type: 'say' as const, text: '\x034\x02¡SU ANO \x0310S\x0311Ú\x0302P\x0312E\x0306R\x0f\x034 BOFETADA TIEMPO!' },
-          { delay: 3000, type: 'say' as const, text: `${data.user} escupe en el suelo!` },
+          { delay: 3000, type: 'say' as const, text: `${data.nick} escupe en el suelo!` },
           { delay: 6000, type: 'say' as const, text: 'la saliva lee ..' },
           { delay: 8000, type: 'say' as const, text: `${target}!` },
           { delay: 10000, type: 'action' as const, text: `\x0305S\x0304Ú\x0307P\x0308E\x0303R\x0f abofetea ${target} ano!!` },
