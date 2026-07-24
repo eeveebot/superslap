@@ -5,6 +5,22 @@ import type { SuperslapRootConfig } from '../types/config.types.mjs';
 
 const metrics = createModuleMetrics('superslap');
 
+/** Track all pending setTimeout IDs for clean shutdown. */
+const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+
+/** Clear all pending timeouts (for graceful shutdown). */
+export function clearPendingTimeouts(): void {
+  for (const id of pendingTimeouts) {
+    clearTimeout(id);
+  }
+  pendingTimeouts.clear();
+}
+
+/** Track a timeout ID for clean shutdown. */
+export function trackTimeout(id: ReturnType<typeof setTimeout>): void {
+  pendingTimeouts.add(id);
+}
+
 /**
  * Check if a user is vulnerable (not invulnerable according to config).
  */
@@ -108,6 +124,7 @@ export function getRandomTarget(
 
 /**
  * Send a sequence of delayed messages (say, action, or raw kick commands).
+ * When kick is false, raw KICK messages are sent as normal say messages instead.
  */
 export function sendDelayedMessages(
   messages: Array<{
@@ -116,10 +133,11 @@ export function sendDelayedMessages(
     text: string;
   }>,
   data: Record<string, unknown>,
-  nats: InstanceType<typeof NatsClient>
+  nats: InstanceType<typeof NatsClient>,
+  kick: boolean = true,
 ): void {
   messages.forEach(({ delay, type, text }) => {
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       // Handle raw messages differently (for kick commands)
       if (type === 'raw') {
         if (text.startsWith('KICK ')) {
@@ -129,17 +147,29 @@ export function sendDelayedMessages(
             const target = parts[2];
             const reason = parts.slice(3).join(' ').substring(1);
 
-            const kickMsg = {
-              action: 'kick',
-              data: {
-                channel: channel,
-                nick: target,
-                reason: reason,
-              },
-            };
+            if (kick) {
+              const kickMsg = {
+                action: 'kick',
+                data: {
+                  channel: channel,
+                  nick: target,
+                  reason: reason,
+                },
+              };
 
-            const kickTopic = `control.chatConnectors.${data['platform']}.${data['instance']}`;
-            void nats.publish(kickTopic, JSON.stringify(kickMsg));
+              const kickTopic = `control.chatConnectors.${data['platform']}.${data['instance']}`;
+              void nats.publish(kickTopic, JSON.stringify(kickMsg));
+            } else {
+              // Kick disabled — send the reason as a normal message
+              void sendChatMessage(nats, {
+                channel: data['channel'] as string,
+                network: data['network'] as string,
+                instance: data['instance'] as string,
+                platform: data['platform'] as string,
+                text: reason,
+                trace: data['trace'] as string,
+              }, metrics);
+            }
           }
         }
         return;
@@ -154,5 +184,6 @@ export function sendDelayedMessages(
         trace: data['trace'] as string,
       }, metrics, type === 'action' ? 'action.outgoing' : 'message.outgoing');
     }, delay);
+    pendingTimeouts.add(timeoutId);
   });
 }

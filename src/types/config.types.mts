@@ -11,6 +11,8 @@ export interface InvulnerableUsersConfig {
 // Root configuration interface
 export interface SuperslapRootConfig {
   invulnerableUsers?: InvulnerableUsersConfig;
+  /** When false, kick commands send the kick reason as a normal message instead. Defaults to true. */
+  kick?: boolean;
   ratelimits?: {
     slapanus?: RateLimitConfig;
     superslapanus?: RateLimitConfig;
@@ -19,5 +21,7 @@ export interface SuperslapRootConfig {
     superslapaniggasanus?: RateLimitConfig;
     superslapsiesta?: RateLimitConfig;
     superslapbaka?: RateLimitConfig;
+    poisonshits?: RateLimitConfig;
+    superpoisonshits?: RateLimitConfig;
   };
 }

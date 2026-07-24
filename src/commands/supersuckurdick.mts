@@ -50,7 +50,7 @@ export async function handleSupersuckurdickCommand({
           { delay: 12000, type: 'raw' as const, text: `KICK ${data.channel} ${target} :\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K\x033S\x038U\x0311P\x034E\x036R\x0310C\x039O\x038C\x034K` },
         ];
 
-        sendDelayedMessages(messages, data, nats);
+        sendDelayedMessages(messages, data, nats, config.kick ?? true);
       } catch (error) {
         log.error('Failed to process supersuckurdick command', { producer: 'superslap', error: error instanceof Error ? error.message : String(error) });
       }

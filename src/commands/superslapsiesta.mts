@@ -60,7 +60,7 @@ export async function handleSuperslapsiestaCommand({
           { delay: 12000, type: 'raw' as const, text: `KICK ${data.channel} ${target} :${spanishSlaps[slapIndex]}` },
         ];
 
-        sendDelayedMessages(messages, data, nats);
+        sendDelayedMessages(messages, data, nats, config.kick ?? true);
       } catch (error) {
         log.error('Failed to process superslapsiesta command', { producer: 'superslap', error: error instanceof Error ? error.message : String(error) });
       }

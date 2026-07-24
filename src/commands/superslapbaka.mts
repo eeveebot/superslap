@@ -2,7 +2,7 @@
 
 import { NatsClient, log, createModuleMetrics, sendChatMessage, queryChannelUsers, NatsSubscriptionResult } from '@eeveebot/libeevee';
 import type { SuperslapRootConfig } from '../types/config.types.mjs';
-import { isVulnerableUser, getRandomTarget, sendDelayedMessages } from '../lib/helpers.mjs';
+import { isVulnerableUser, getRandomTarget, sendDelayedMessages, trackTimeout } from '../lib/helpers.mjs';
 
 const metrics = createModuleMetrics('superslap');
 
@@ -50,21 +50,35 @@ export async function handleSuperslapbakaCommand({
           { delay: 10000, type: 'action' as const, text: `wa SUUPAA!! ${target} no kōmon o tataku!!` },
         ];
 
-        sendDelayedMessages(messages, data, nats);
+        sendDelayedMessages(messages, data, nats, config.kick ?? true);
 
-        // Send kick command
-        setTimeout(() => {
-          const kickMsg = {
-            action: 'kick',
-            data: {
+        // Send kick command (or normal message if kicks are disabled)
+        const kickReason = 'SUPAAOSHIRISUPAAOSHIRISUUPAOSHIRISUUPAOSHIRISUUPAOSHIRI';
+        const kickEnabled = config.kick ?? true;
+        const kickTimeoutId = setTimeout(() => {
+          if (kickEnabled) {
+            const kickMsg = {
+              action: 'kick',
+              data: {
+                channel: data.channel,
+                nick: target,
+                reason: kickReason,
+              },
+            };
+            const kickTopic = `control.chatConnectors.${data.platform}.${data.instance}`;
+            void nats.publish(kickTopic, JSON.stringify(kickMsg));
+          } else {
+            void sendChatMessage(nats, {
               channel: data.channel,
-              nick: target,
-              reason: 'SUPAAOSHIRISUPAAOSHIRISUUPAOSHIRISUUPAOSHIRISUUPAOSHIRI',
-            },
-          };
-          const kickTopic = `control.chatConnectors.${data.platform}.${data.instance}`;
-          void nats.publish(kickTopic, JSON.stringify(kickMsg));
+              network: data.network,
+              instance: data.instance,
+              platform: data.platform,
+              text: kickReason,
+              trace: data.trace,
+            }, metrics);
+          }
         }, 12000);
+        trackTimeout(kickTimeoutId);
       } catch (error) {
         log.error('Failed to process superslapbaka command', { producer: 'superslap', error: error instanceof Error ? error.message : String(error) });
       }

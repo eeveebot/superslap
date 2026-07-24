@@ -51,7 +51,7 @@ export async function handleSuperslapaniggasanusCommand({
           { delay: 20000, type: 'raw' as const, text: `KICK ${data.channel} ${target} :\x031THISNIGGASDOWNTHISNIGGASDOWNTHISNIGGASDOWNTHISNIGGASDOWNTHISNIGGASDOWNTHISNIGGASDOWN` },
         ];
 
-        sendDelayedMessages(messages, data, nats);
+        sendDelayedMessages(messages, data, nats, config.kick ?? true);
       } catch (error) {
         log.error('Failed to process superslapaniggasanus command', { producer: 'superslap', error: error instanceof Error ? error.message : String(error) });
       }

@@ -13,6 +13,9 @@ Key design decisions:
 - **Vulnerability filtering** — Users on the invulnerable list, matching invulnerable hostmasks, or with IRC operator modes (`+o`, `+O`, `+a`, `+q`) are never selected as targets.
 - **Delayed message sequences** — Slaps are staged as timed sequences of says, actions, and kick commands for dramatic effect (1 s → 3 s → 6 s → 8 s → 10 s → 12 s).
 - **Multi-language variants** — Spanish (`superslapsiesta`) and Japanese (`superslapbaka`) localisations with culturally-themed messages.
+- **Three-way target selection** — Poisonshits commands pick from 3 candidates (requested target, random user, caster) using crypto-secure RNG, adding an element of self-risk.
+- **Optional kicks** — Set `kick: false` in config to convert all kick commands to normal messages. Useful for channels where kicks are restricted or unwanted.
+- **Clean shutdown** — All pending timeouts (including superpoisonshits' up-to-5-hour random kicks) are tracked and cleared on module shutdown.
 
 ## Features
 
@@ -22,6 +25,10 @@ Key design decisions:
 - Configurable invulnerability lists
 - Per-command rate limiting
 - Multi-language support (English, Spanish, Japanese)
+- **Optional kicks** — set `kick: false` in config to convert all kicks to normal messages
+- Poisonshits commands with three-way target selection (requested + random + caster)
+- Superpoisonshits delivers 3 random-delay kicks over up to 5 hours
+- Clean shutdown — all pending timeouts cleared on SIGTERM/SIGINT
 - Automatic command and help registration via libeevee
 - Module metrics and uptime stats
 
@@ -60,9 +67,12 @@ botModules:
         - moderator
         hostmasks:
         - "trusted.*"
+      kick: true
       ratelimits:
         slapanus: { windowMs: 10000, limit: 3 }
         superslapanus: { windowMs: 10000, limit: 3 }
+        poisonshits: { windowMs: 10000, limit: 3 }
+        superpoisonshits: { windowMs: 10000, limit: 3 }
 ```
 
 ### Config keys
@@ -71,7 +81,8 @@ botModules:
 |-----|------|---------|-------------|
 | `invulnerableUsers.users` | `string[]` | `["admin", "moderator"]` | Nicks that can never be targeted. |
 | `invulnerableUsers.hostmasks` | `string[]` | `[]` | Hostmask regex patterns; matching users are immune. Falls back to exact match if the regex is invalid. |
-| `ratelimits.<command>` | `RateLimitConfig` | libeevee default | Per-command rate limit. Keys match command display names (e.g. `slapanus`, `superslapbaka`). |
+| `kick` | `boolean` | `true` | When `false`, all kick commands send the kick reason as a normal message instead of actually kicking the user. |
+| `ratelimits.<command>` | `RateLimitConfig` | libeevee default | Per-command rate limit. Keys match command display names (e.g. `slapanus`, `superslapbaka`, `poisonshits`). |
 
 ## Usage / Commands
 
@@ -82,9 +93,12 @@ Send any of the following commands in a channel where the bot is present:
 | `!slapanus` | Casual slap — stages a brief animation, no kick. |
 | `!superslapanus` | Super slap — dramatic animation + kick. |
 | `!superslapanusv2` | Super slap v2 — rainbow-coloured animation + kick. Invulnerable users get a snarky reply instead. |
+| `!superslapaniggasanus` | Super slap variant — its own flavour of chaos + kick. |
 | `!supersuckurdick` | Mystery variant — its own flavour of chaos + kick. |
 | `!superslapsiesta` | Spanish-language super slap + kick. Random kick message drawn from a pool. |
 | `!superslapbaka` | Japanese-language super slap + kick. |
+| `!poisonshits` | Poison shit ritual — picks from 3 candidates (requested, random, caster), kicks the chosen one. |
+| `!superpoisonshits` | Cursed poison shits — same 3-way selection, then 3 random-delay kicks over up to 5 hours. |
 
 ### Example
 
@@ -97,6 +111,8 @@ Send any of the following commands in a channel where the bot is present:
 * bot slaps victim's anus!!
 *** victim was kicked by bot (SUPERANALSUPERANAL…)
 ```
+
+The bot's nick is used dynamically (shown as `fishy` above for illustration).
 
 If the caller is on the invulnerable list (or has operator modes), the "super" variants will respond with a dismissal instead of running the full animation.
 

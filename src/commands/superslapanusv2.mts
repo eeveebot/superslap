@@ -51,7 +51,7 @@ export async function handleSuperslapanusv2Command({
           { delay: 12000, type: 'raw' as const, text: `KICK ${data.channel} ${target} :\x036,4S\x0313,07U\x0312,08P\x033,09E\x038,12R\x037,13A\x034,06N\x036,04A\x0313,07L\x0312,08S\x033,09U\x038,12P\x037,13E\x034,06R\x036,04A\x0313,07N\x0312,08A\x033,09L\x038,12S\x037,13U\x034,06P\x036,04E\x0313,07R\x0312,08A\x033,09N\x038,12A\x037,13L\x034,06S\x036,04U\x0313,07P\x0312,08E\x033,09R\x038,12A\x037,13N\x034,06A\x036,04L\x0313,07S\x0312,08U\x033,09P\x038,12E\x037,13R\x034,06A\x036,04N\x0313,07A\x0312,08L\x033,09S\x038,12U\x037,13P\x034,06E\x036,04R\x0313,07A\x0312,08N\x033,09A\x038,12L` },
         ];
 
-        sendDelayedMessages(messages, data, nats);
+        sendDelayedMessages(messages, data, nats, config.kick ?? true);
       } catch (error) {
         log.error('Failed to process superslapanusv2 command', { producer: 'superslap', error: error instanceof Error ? error.message : String(error) });
       }

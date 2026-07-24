@@ -26,6 +26,9 @@ import { handleSuperslapaniggasanusCommand } from './commands/superslapaniggasan
 import { handleSupersuckurdickCommand } from './commands/supersuckurdick.mjs';
 import { handleSuperslapsiestaCommand } from './commands/superslapsiesta.mjs';
 import { handleSuperslapbakaCommand } from './commands/superslapbaka.mjs';
+import { handlePoisonshitsCommand } from './commands/poisonshits.mjs';
+import { handleSuperpoisonshitsCommand } from './commands/superpoisonshits.mjs';
+import { clearPendingTimeouts } from './lib/helpers.mjs';
 import fs from 'node:fs';
 
 // Record module startup time for uptime tracking
@@ -41,6 +44,8 @@ const supersuckurdickCommandUUID = '40897742-1474-43e0-9f6d-98fc83296fda';
 const superslapaniggasanusCommandUUID = 'b9643e38-0c43-4530-8344-ad48c372e146';
 const superslapsiestaCommandUUID = '4398f1b5-6537-49bd-a9c2-7a90fa5e0d87';
 const superslapbakaCommandUUID = 'c3104b60-8278-481f-8bbf-db109147abf7';
+const poisonshitsCommandUUID = '72eb691f-febc-4213-af23-79f993841ab2';
+const superpoisonshitsCommandUUID = '12849765-5dc8-4e15-aafc-a627d58fa198';
 
 const natsClients: Array<InstanceType<typeof NatsClient>> = [];
 const natsSubscriptions: Array<Promise<NatsSubscriptionResult>> = [];
@@ -56,7 +61,9 @@ setupHttpServer({
 });
 
 // Register graceful shutdown handler
-registerGracefulShutdown(natsClients);
+registerGracefulShutdown(natsClients, async () => {
+  clearPendingTimeouts();
+});
 
 // Setup NATS connection
 const nats = await createNatsConnection();
@@ -91,6 +98,8 @@ const commandRegistrations = await Promise.all([
   registerCommand(nats, { commandUUID: superslapaniggasanusCommandUUID, commandDisplayName: 'superslapaniggasanus', regex: '^superslapaniggasanus\\s*', ratelimit: superslapConfig.ratelimits?.superslapaniggasanus || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: superslapsiestaCommandUUID, commandDisplayName: 'superslapsiesta', regex: '^superslapsiesta\\s*', ratelimit: superslapConfig.ratelimits?.superslapsiesta || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: superslapbakaCommandUUID, commandDisplayName: 'superslapbaka', regex: '^superslapbaka\\s*', ratelimit: superslapConfig.ratelimits?.superslapbaka || defaultRateLimit }, metrics),
+  registerCommand(nats, { commandUUID: poisonshitsCommandUUID, commandDisplayName: 'poisonshits', regex: '^poisonshits\\s*', ratelimit: superslapConfig.ratelimits?.poisonshits || defaultRateLimit }, metrics),
+  registerCommand(nats, { commandUUID: superpoisonshitsCommandUUID, commandDisplayName: 'superpoisonshits', regex: '^superpoisonshits\\s*', ratelimit: superslapConfig.ratelimits?.superpoisonshits || defaultRateLimit }, metrics),
 ]);
 commandRegistrations.flat().forEach((sub) => natsSubscriptions.push(sub));
 
@@ -102,6 +111,8 @@ natsSubscriptions.push(handleSuperslapaniggasanusCommand({ nats, commandUUID: su
 natsSubscriptions.push(handleSupersuckurdickCommand({ nats, commandUUID: supersuckurdickCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapsiestaCommand({ nats, commandUUID: superslapsiestaCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapbakaCommand({ nats, commandUUID: superslapbakaCommandUUID, config: superslapConfig }));
+natsSubscriptions.push(handlePoisonshitsCommand({ nats, commandUUID: poisonshitsCommandUUID, config: superslapConfig }));
+natsSubscriptions.push(handleSuperpoisonshitsCommand({ nats, commandUUID: superpoisonshitsCommandUUID, config: superslapConfig }));
 
 // Note: control.registerCommands subscriptions are now handled by registerCommand() above
 
@@ -118,6 +129,8 @@ const superslapHelp: HelpEntry[] = [
   { command: 'superslapaniggasanus', descr: 'Nigga you better shut yo gatdam lip', params: [] },
   { command: 'superslapsiesta', descr: 'Spanish version of superslap', params: [] },
   { command: 'superslapbaka', descr: 'Japanese version of superslap', params: [] },
+  { command: 'poisonshits', descr: 'Performs a poison shit ritual on a random target', params: [] },
+  { command: 'superpoisonshits', descr: 'Curses a target with a bleeding anus (3 random kicks)', params: [] },
 ];
 
 // Register help information using registerHelp helper
