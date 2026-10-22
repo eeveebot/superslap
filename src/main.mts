@@ -40,7 +40,6 @@ const slapanusCommandUUID = '6771387c-5e25-4758-bdf2-adedcd3d5272';
 const superslapanusCommandUUID = '36060973-396b-435c-8998-2980e6c2c0c0';
 const superslapanusv2CommandUUID = '6e3c5726-3175-436a-9432-4b8a38d3e986';
 const supersuckurdickCommandUUID = '40897742-1474-43e0-9f6d-98fc83296fda';
-const superslapaniggasanusCommandUUID = 'b9643e38-0c43-4530-8344-ad48c372e146';
 const superslapsiestaCommandUUID = '4398f1b5-6537-49bd-a9c2-7a90fa5e0d87';
 const superslapbakaCommandUUID = 'c3104b60-8278-481f-8bbf-db109147abf7';
 const poisonshitsCommandUUID = '72eb691f-febc-4213-af23-79f993841ab2';
