@@ -22,7 +22,6 @@ import { SuperslapRootConfig } from './types/config.types.mjs';
 import { handleSlapanusCommand } from './commands/slapanus.mjs';
 import { handleSuperslapanusCommand } from './commands/superslapanus.mjs';
 import { handleSuperslapanusv2Command } from './commands/superslapanusv2.mjs';
-import { handleSuperslapaniggasanusCommand } from './commands/superslapaniggasanus.mjs';
 import { handleSupersuckurdickCommand } from './commands/supersuckurdick.mjs';
 import { handleSuperslapsiestaCommand } from './commands/superslapsiesta.mjs';
 import { handleSuperslapbakaCommand } from './commands/superslapbaka.mjs';
@@ -95,7 +94,6 @@ const commandRegistrations = await Promise.all([
   registerCommand(nats, { commandUUID: superslapanusCommandUUID, commandDisplayName: 'superslapanus', regex: '^superslapanus(?!\\w)\\s*', ratelimit: superslapConfig.ratelimits?.superslapanus || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: superslapanusv2CommandUUID, commandDisplayName: 'superslapanusv2', regex: '^superslapanusv2\\s*', ratelimit: superslapConfig.ratelimits?.superslapanusv2 || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: supersuckurdickCommandUUID, commandDisplayName: 'supersuckurdick', regex: '^supersuckurdick\\s*', ratelimit: superslapConfig.ratelimits?.supersuckurdick || defaultRateLimit }, metrics),
-  registerCommand(nats, { commandUUID: superslapaniggasanusCommandUUID, commandDisplayName: 'superslapaniggasanus', regex: '^superslapaniggasanus\\s*', ratelimit: superslapConfig.ratelimits?.superslapaniggasanus || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: superslapsiestaCommandUUID, commandDisplayName: 'superslapsiesta', regex: '^superslapsiesta\\s*', ratelimit: superslapConfig.ratelimits?.superslapsiesta || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: superslapbakaCommandUUID, commandDisplayName: 'superslapbaka', regex: '^superslapbaka\\s*', ratelimit: superslapConfig.ratelimits?.superslapbaka || defaultRateLimit }, metrics),
   registerCommand(nats, { commandUUID: poisonshitsCommandUUID, commandDisplayName: 'poisonshits', regex: '^poisonshits\\s*', ratelimit: superslapConfig.ratelimits?.poisonshits || defaultRateLimit }, metrics),
@@ -107,7 +105,6 @@ commandRegistrations.flat().forEach((sub) => natsSubscriptions.push(sub));
 natsSubscriptions.push(handleSlapanusCommand({ nats, commandUUID: slapanusCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapanusCommand({ nats, commandUUID: superslapanusCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapanusv2Command({ nats, commandUUID: superslapanusv2CommandUUID, config: superslapConfig }));
-natsSubscriptions.push(handleSuperslapaniggasanusCommand({ nats, commandUUID: superslapaniggasanusCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSupersuckurdickCommand({ nats, commandUUID: supersuckurdickCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapsiestaCommand({ nats, commandUUID: superslapsiestaCommandUUID, config: superslapConfig }));
 natsSubscriptions.push(handleSuperslapbakaCommand({ nats, commandUUID: superslapbakaCommandUUID, config: superslapConfig }));
@@ -126,7 +123,6 @@ const superslapHelp: HelpEntry[] = [
   { command: 'superslapanus', descr: 'Knocks a random user out of the room by the anus', params: [] },
   { command: 'superslapanusv2', descr: 'Knocks a random user out of the room by the anus, but v2', params: [] },
   { command: 'supersuckurdick', descr: "I don't know how or WHY, it's just here OKAY?!", params: [] },
-  { command: 'superslapaniggasanus', descr: 'Nigga you better shut yo gatdam lip', params: [] },
   { command: 'superslapsiesta', descr: 'Spanish version of superslap', params: [] },
   { command: 'superslapbaka', descr: 'Japanese version of superslap', params: [] },
   { command: 'poisonshits', descr: 'Performs a poison shit ritual on a random target', params: [] },

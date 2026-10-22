@@ -93,7 +93,6 @@ Send any of the following commands in a channel where the bot is present:
 | `!slapanus` | Casual slap — stages a brief animation, no kick. |
 | `!superslapanus` | Super slap — dramatic animation + kick. |
 | `!superslapanusv2` | Super slap v2 — rainbow-coloured animation + kick. Invulnerable users get a snarky reply instead. |
-| `!superslapaniggasanus` | Super slap variant — its own flavour of chaos + kick. |
 | `!supersuckurdick` | Mystery variant — its own flavour of chaos + kick. |
 | `!superslapsiesta` | Spanish-language super slap + kick. Random kick message drawn from a pool. |
 | `!superslapbaka` | Japanese-language super slap + kick. |
